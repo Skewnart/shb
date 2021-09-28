@@ -2,19 +2,24 @@
 #define clock_h
 
 #include <TM1637Display.h>
+#include <DS3231.h>
 
 class Clock : TM1637Display {
 
     private :
+        DS3231* rtc;
         bool h12, PM;
 
+        static const int CLK = 2;
+        static const int DIO = 3;
+
     public :
-        const int CLK = 2;
-        const int DIO = 3;
 
         Clock();
+        ~Clock();
 
-        void Display(int);
+        void DisplayTime();
+        void SetTime(int, int);
 };
 
 #endif
