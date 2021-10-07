@@ -1,12 +1,13 @@
 #include "button.h"
 
 ButtonState::ButtonState()
-    : state(RELEASED), since(0){
+    : current(RELEASED), previous(RELEASED), since(0){
 }
 
 ButtonState* ButtonState::Update(const int interval, const int input){
-    if (input != (int)this->state){
-        this->state = (State)input;
+    this->previous = this->current;
+    if (input != (int)this->current){
+        this->current = (State)input;
         since = 0;
     }
     else{

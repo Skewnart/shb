@@ -11,7 +11,8 @@ enum State{
 class ButtonState {
 
     public :
-        State state;
+        State previous;
+        State current;
         long since;
         
         ButtonState();
