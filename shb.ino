@@ -19,10 +19,10 @@ void loop() {
   //Serial.println(ultrasonic_sensor->GetDistanceMm());
   
   ButtonState* state = button->UpdateState(100);
-  if ((int)state->current == 1 && (int)state->previous == 0){
+  if ((int)state->current == RELEASED && (int)state->previous == PRESSED){
     Serial.println("Bouton relâché !");
   }
-  else if ((int)state->current == 0){
+  else if ((int)state->current == PRESSED){
     Serial.print("Bouton appuyé depuis ");
     Serial.print(state->since / 1000.0);
     Serial.println(" secondes !");
