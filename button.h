@@ -23,11 +23,12 @@ class Button {
 
     private :
         int input_pin;
+        int update_interval;
 
     public :
         ButtonState* state;
 
-        Button(int);
+        Button(const int&, const int&);
         ButtonState* UpdateState(const int);
 };
 
