@@ -7,6 +7,7 @@
 Clock* clock;
 UltrasonicSensor* ultrasonic_sensor; 
 Button* button;
+bool buttonWaitForRelease;
 
 void setup() {
   Serial.begin(9600);
@@ -14,25 +15,37 @@ void setup() {
   clock = new Clock(DELAY_INTERVAL);
   ultrasonic_sensor = new UltrasonicSensor();
   button = new Button(6, DELAY_INTERVAL);
+  buttonWaitForRelease = false;
 }
 
-void loop() {
-  //clock->DisplayTime();
-  //Serial.println(ultrasonic_sensor->GetDistanceMm());
-  
-  // ButtonState* state = button->UpdateState(100);
-  // if ((int)state->current == RELEASED && (int)state->previous == PRESSED){
-  //   Serial.println("Bouton relâché !");
-  // }
-  // else if ((int)state->current == PRESSED){
-  //   Serial.print("Bouton appuyé depuis ");
-  //   Serial.print(state->since / 1000.0);
-  //   Serial.println(" secondes !");
-  // }
-
+void loop() {  
+  ButtonState* state = button->UpdateState(100);
   int distance = ultrasonic_sensor->GetDistanceMm();
-  if (distance >= 10 && distance < 50){
-    clock->ShowDuringSeconds(3);
+
+  if (buttonWaitForRelease && state->current == RELEASED)
+    buttonWaitForRelease = false;
+
+  if (state->current == PRESSED && state->since >= 3000 && !buttonWaitForRelease){
+    if (clock->GetMode() == SETTINGS)
+      clock->SettingsNextStep();
+    else
+      clock->SetSettingsMode();
+      
+    buttonWaitForRelease = true;
+  }
+
+  if (clock->GetMode() == SETTINGS) {
+    if (distance > 100){
+      clock->SettingsChangeTime(true);
+    }
+    else if (distance < 5){
+      clock->SettingsChangeTime(false);
+    }
+  }
+  else {
+    if (distance >= 10 && distance < 50){
+      clock->ShowDuringSeconds(3);
+    }
   }
 
   clock->UpdateDisplay();
