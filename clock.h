@@ -18,6 +18,7 @@ class Clock : TM1637Display {
         int update_interval;
         ClockMode mode;
         int settingsStep;
+        bool settingsLocked;
 
         static const int CLK = 2;
         static const int DIO = 3;
@@ -37,6 +38,8 @@ class Clock : TM1637Display {
         void SetSettingsMode();
         void SettingsNextStep();
         void SettingsChangeTime(const bool);
+        bool GetSettingsLocked() const;
+        void ToggleSettingsLocked();
 };
 
 #endif

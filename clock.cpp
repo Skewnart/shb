@@ -58,6 +58,7 @@ void Clock::SetSettingsMode(){
     this->mode = SETTINGS;
     this->displayMsRemaining = 0;
     this->settingsStep = 1;
+    this->settingsLocked = true;
 }
 
 void Clock::SettingsNextStep(){
@@ -65,19 +66,24 @@ void Clock::SettingsNextStep(){
         this->mode = HOUR;
         this->clear();
     }
+    this->settingsLocked = true;
 }
 
 void Clock::SettingsChangeTime(const bool isIncrease) {
-    int hour = this->rtc->getHour(h12, PM);
-    int minute = this->rtc->getMinute();
-    int adding = isIncrease ? 1 : -1;
+    if (!this->settingsLocked){
+        if (this->settingsStep == 1)
+            this->SetTime(((this->rtc->getHour(h12, PM) + 24) + (isIncrease ? 1 : -1)) % 24, this->rtc->getMinute());
+        else
+            this->SetTime(this->rtc->getHour(h12, PM), ((this->rtc->getMinute() + 60) + (isIncrease ? 1 : -1)) % 60);
+    }
+}
 
-    if (this->settingsStep == 1)
-        hour = ((hour + 24) + adding) % 24;
-    else
-        minute = ((minute + 60) + adding) % 60;
+void Clock::ToggleSettingsLocked(){
+    this->settingsLocked = !this->settingsLocked;
+}
 
-    this->SetTime(hour, minute);
+bool Clock::GetSettingsLocked() const {
+  return this->settingsLocked;
 }
 
 ClockMode Clock::GetMode() const{

@@ -22,24 +22,33 @@ void loop() {
   ButtonState* state = button->UpdateState(100);
   int distance = ultrasonic_sensor->GetDistanceMm();
 
-  if (buttonWaitForRelease && state->current == RELEASED)
-    buttonWaitForRelease = false;
-
   if (state->current == PRESSED && state->since >= 3000 && !buttonWaitForRelease){
     if (clock->GetMode() == SETTINGS)
       clock->SettingsNextStep();
-    else
+    else {
       clock->SetSettingsMode();
-      
+    }
+    
     buttonWaitForRelease = true;
   }
 
-  if (clock->GetMode() == SETTINGS) {
-    if (distance > 100){
-      clock->SettingsChangeTime(true);
+  if (state->current == RELEASED){
+    if (buttonWaitForRelease){
+      buttonWaitForRelease = false;
     }
-    else if (distance < 5){
-      clock->SettingsChangeTime(false);
+    else if (state->previous == PRESSED && clock->GetMode() == SETTINGS){
+      clock->ToggleSettingsLocked();
+    }
+  }
+
+  if (clock->GetMode() == SETTINGS) {
+    if (!clock->GetSettingsLocked()){
+      if (distance > 100){
+        clock->SettingsChangeTime(true);
+      }
+      else if (distance < 50){
+        clock->SettingsChangeTime(false);
+      }
     }
   }
   else {
