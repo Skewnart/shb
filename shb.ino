@@ -1,12 +1,14 @@
 #include "clock.h"
 #include "ultrasonic_sensor.h"
 #include "button.h"
+#include "adafruit_leds.h"
 
 #define DELAY_INTERVAL 100
 
 Clock* clock;
 UltrasonicSensor* ultrasonic_sensor;
 Button *button1, *button2;
+AdafruitLeds *leds;
 bool buttonWaitForRelease;
 
 void setup() {
@@ -16,6 +18,7 @@ void setup() {
   ultrasonic_sensor = new UltrasonicSensor();
   button1 = new Button(6, DELAY_INTERVAL);
   button2 = new Button(7, DELAY_INTERVAL);
+  leds = new AdafruitLeds(8, 0.5, 20);
   buttonWaitForRelease = false;
 }
 
@@ -62,5 +65,11 @@ void loop() {
   }
 
   clock->UpdateDisplay();
-  delay(DELAY_INTERVAL);
+
+  for (int i = 0; i < DELAY_INTERVAL; i += leds->GetLedsDelay()) {
+    leds->ShowNext();
+    delay(leds->GetLedsDelay());
+  }
 }
+
+//[Leds] Premiers tests d'allumage avec la classe (et quelques features non utilisées)
