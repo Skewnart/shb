@@ -6,6 +6,18 @@
  #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
+class FadingSystem{
+    private :
+        bool increasing;
+        int fadingTime, step, currentStep;
+
+    public :
+        FadingSystem(const int, const int);
+        void ToggleFade();
+        void ComputeNext();
+        float GetBrightness() const;
+};
+
 class LedColor{
     private :
         uint8_t r, g, b;
@@ -39,13 +51,17 @@ class AdafruitLeds : Adafruit_NeoPixel{
 
         LedEndpoint *first_endpoint, *last_endpoint;
         int leds_delay;
+        FadingSystem* fadingSystem;
+
+        void computeNext();
     
     public :
-        AdafruitLeds(const int, const float, const int);
+        AdafruitLeds(const int, const float, const int, const int);
         ~AdafruitLeds();
 
         int GetLedsDelay() const;
         void ShowNext();
+        void ToggleLight();
 };
 
 #endif

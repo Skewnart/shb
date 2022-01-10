@@ -18,7 +18,7 @@ void setup() {
   ultrasonic_sensor = new UltrasonicSensor();
   button1 = new Button(6, DELAY_INTERVAL);
   button2 = new Button(7, DELAY_INTERVAL);
-  leds = new AdafruitLeds(8, 0.5, 20);
+  leds = new AdafruitLeds(8, 0.5, 10, 1000);
   buttonWaitForRelease = false;
 }
 
@@ -42,9 +42,13 @@ void loop() {
     if (buttonWaitForRelease) {
       buttonWaitForRelease = false;
     }
-    else if ((state_btn1->previous == PRESSED || state_btn2->previous == PRESSED)
-             && clock->GetMode() == SETTINGS) {
-      clock->ToggleSettingsLocked();
+    else if (state_btn1->previous == PRESSED || state_btn2->previous == PRESSED) {
+      if (clock->GetMode() == SETTINGS) {
+        clock->ToggleSettingsLocked();
+      }
+      else {
+        leds->ToggleLight();
+      }
     }
   }
 
@@ -71,5 +75,3 @@ void loop() {
     delay(leds->GetLedsDelay());
   }
 }
-
-//[Leds] Premiers tests d'allumage avec la classe (et quelques features non utilisées)

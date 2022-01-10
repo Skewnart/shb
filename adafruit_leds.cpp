@@ -3,6 +3,38 @@
 const int AdafruitLeds::NUMPIXELS;
 
 /* ##############################################
+################## FADINGSYSTEM #################
+############################################## */
+
+FadingSystem::FadingSystem(const int fadingTime, const int step)
+ : fadingTime(fadingTime), increasing(false), step(step), currentStep(0) {
+
+}
+
+void FadingSystem::ComputeNext(){
+    if (this->increasing && this->currentStep < this->fadingTime){
+        this->currentStep += this->step;
+        if (this->currentStep > this->fadingTime){
+            this->currentStep = this->fadingTime;
+        }
+    }
+    else if (!this->increasing && this->currentStep > 0){
+        this->currentStep -= this->step;
+        if (this->currentStep < 0){
+            this->currentStep = 0;
+        }
+    }
+}
+
+void FadingSystem::ToggleFade(){
+    this->increasing = !this->increasing;
+}
+
+float FadingSystem::GetBrightness() const{
+    return (float)this->currentStep / (float)this->fadingTime;
+}
+
+/* ##############################################
 #################### LEDCOLOR ###################
 ############################################## */
 
@@ -49,7 +81,7 @@ LedColor* LedEndpoint::GetPreviousColor() const{
 ################# ADAFRUITLEDS ##################
 ############################################## */
 
-AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, const int leds_delay)
+AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, const int leds_delay, const int fadingTime)
  : Adafruit_NeoPixel(AdafruitLeds::NUMPIXELS, leds_pin, NEO_GRB + NEO_KHZ800), leds_delay(leds_delay) {
 
 #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
@@ -58,6 +90,7 @@ AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, c
 
     this->first_endpoint = new LedEndpoint(255, 255, 255);
     this->last_endpoint = new LedEndpoint(255, 255, 255);
+    this->fadingSystem = new FadingSystem(fadingTime, leds_delay);
 
     this->begin();
     
@@ -74,12 +107,24 @@ int AdafruitLeds::GetLedsDelay() const {
     return this->leds_delay;
 }
 
+void AdafruitLeds::computeNext() {
+    this->fadingSystem->ComputeNext();
+}
+
 void AdafruitLeds::ShowNext() {
+    this->computeNext();
+    float brightFactor = this->fadingSystem->GetBrightness();
+
     for(int i = 0; i < NUMPIXELS; i++) {
-        this->setPixelColor(i, this->Color(this->first_endpoint->GetCurrentColor()->GetR(),
-                    this->first_endpoint->GetCurrentColor()->GetG(),
-                    this->first_endpoint->GetCurrentColor()->GetB()));
+        this->setPixelColor(i,
+        this->Color(this->first_endpoint->GetCurrentColor()->GetR() * brightFactor,
+                    this->first_endpoint->GetCurrentColor()->GetG() * brightFactor,
+                    this->first_endpoint->GetCurrentColor()->GetB() * brightFactor));
     }
 
     this->show();
+}
+
+void AdafruitLeds::ToggleLight() {
+    this->fadingSystem->ToggleFade();
 }
