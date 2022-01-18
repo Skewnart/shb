@@ -4,6 +4,7 @@
 #include "adafruit_leds.h"
 
 #define DELAY_INTERVAL 100
+#define PIN_FOR_RANDOM A0
 
 Clock* clock;
 UltrasonicSensor* ultrasonic_sensor;
@@ -13,12 +14,13 @@ bool buttonWaitForRelease;
 
 void setup() {
   Serial.begin(9600);
+  randomSeed(analogRead(PIN_FOR_RANDOM));
 
   clock = new Clock(DELAY_INTERVAL);
   ultrasonic_sensor = new UltrasonicSensor();
   button1 = new Button(6, DELAY_INTERVAL);
   button2 = new Button(7, DELAY_INTERVAL);
-  leds = new AdafruitLeds(8, 0.5, 10, 1000);
+  leds = new AdafruitLeds(8, 0.5, 10, 1000, 2000);
   buttonWaitForRelease = false;
 }
 

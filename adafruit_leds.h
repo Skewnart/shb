@@ -23,25 +23,30 @@ class LedColor{
         uint8_t r, g, b;
 
     public :
-        LedColor(const uint8_t, const uint8_t, const uint8_t);
+        LedColor(const bool);
         
         uint8_t GetR() const;
         uint8_t GetG() const;
         uint8_t GetB() const;
+
+        void RequestNewColor();
+        void Copy(const LedColor*);
+        void UpdateColor(const int, const int, const int);
 };
 
 class LedEndpoint{
     private :
-        LedColor *current_color, *previous_color;
+        LedColor *current_color, *previous_color, *next_color;
+        int changeColorTime, step, currentStep;
+    
+        void requestNewColor();
 
     public :
-        LedEndpoint(const uint8_t, const uint8_t, const uint8_t);
+        LedEndpoint(const int, const int);
         ~LedEndpoint();
 
         LedColor* GetCurrentColor() const;
-        LedColor* GetPreviousColor() const;
-
-        void RequestNewColor();
+        void ComputeNext();
 };
 
 class AdafruitLeds : Adafruit_NeoPixel{
@@ -56,7 +61,7 @@ class AdafruitLeds : Adafruit_NeoPixel{
         void computeNext();
     
     public :
-        AdafruitLeds(const int, const float, const int, const int);
+        AdafruitLeds(const int, const float, const int, const int, const int);
         ~AdafruitLeds();
 
         int GetLedsDelay() const;
