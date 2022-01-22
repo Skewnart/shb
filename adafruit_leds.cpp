@@ -120,10 +120,54 @@ void LedEndpoint::ComputeNext(){
 }
 
 /* ##############################################
+################## TOPBEHAVIOR ##################
+############################################## */
+
+TopBehavior::TopBehavior(const int step, const int lightTime, const int waitingTime, const int ledCount, const float brightFactor)
+ : step(step), lightTime(lightTime), waitingTime(waitingTime), currentStep(0), ledCount(ledCount), brightFactor(brightFactor), isWaiting(true) {
+
+    this->requestNewPosition();
+}
+
+void TopBehavior::ComputeNext(){
+    if (this->currentStep >= (this->isWaiting ? this->waitingTime : this->lightTime)){
+        this->currentStep = 0;
+        this->isWaiting = !this->isWaiting;
+
+        if (!this->isWaiting){
+            this->requestNewPosition();
+        }
+    }
+
+    this->currentStep += this->step;
+}
+
+void TopBehavior::requestNewPosition(){
+    this->position = random(this->ledCount);
+}
+
+int TopBehavior::GetPosition() const {
+    return this->position;
+}
+
+float TopBehavior::GetOriginalBrightFactor() const {
+    return this->brightFactor;
+}
+
+float TopBehavior::GetCurrentBrightFactor() const {
+    if (this->isWaiting)
+        return 0.0;
+    else{
+        float factor = (float)this->currentStep / (float)this->lightTime;
+        return (factor <= 0.5 ? factor : 1.0 - factor) * 2 * this->brightFactor;
+    }
+}
+
+/* ##############################################
 ################# ADAFRUITLEDS ##################
 ############################################## */
 
-AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, const int leds_delay, const int fadingTime, const int changeColorTime)
+AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, const int leds_delay, const int fadingTime, const int changeColorTime, const int topLightTime, const int topWaitingTime, const float topBrightFactor)
  : Adafruit_NeoPixel(AdafruitLeds::NUMPIXELS, leds_pin, NEO_GRB + NEO_KHZ800), leds_delay(leds_delay) {
 
 #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
@@ -133,6 +177,8 @@ AdafruitLeds::AdafruitLeds(const int leds_pin, const float brightness_percent, c
     this->first_endpoint = new LedEndpoint(changeColorTime, leds_delay);
     this->last_endpoint = new LedEndpoint(changeColorTime, leds_delay);
     this->fadingSystem = new FadingSystem(fadingTime, leds_delay);
+
+    this->topBehavior = new TopBehavior(leds_delay, topLightTime, topWaitingTime, AdafruitLeds::NUMPIXELS, topBrightFactor);
 
     this->begin();
     
@@ -154,11 +200,17 @@ void AdafruitLeds::computeNext() {
     this->fadingSystem->ComputeNext();
     this->first_endpoint->ComputeNext();
     this->last_endpoint->ComputeNext();
+
+    this->topBehavior->ComputeNext();
 }
 
 void AdafruitLeds::ShowNext() {
     this->computeNext();
-    float brightFactor = this->fadingSystem->GetBrightness();
+    float fadeBrightFactor = this->fadingSystem->GetBrightness();
+
+    float minusBright = this->topBehavior->GetOriginalBrightFactor();
+    float topBrightFactor = this->topBehavior->GetCurrentBrightFactor();
+    int topPosition = this->topBehavior->GetPosition();
 
     for (int i = 1; i >= -1; i -= 2){
         LedColor* color = i == 1 ? this->first_endpoint->GetCurrentColor() : this->last_endpoint->GetCurrentColor();
@@ -168,14 +220,16 @@ void AdafruitLeds::ShowNext() {
             if(index == 0 && j == 0 && i == -1)
                 index = NUMPIXELS - 1;
 
+            float totalBright = fadeBrightFactor * (1.0 - minusBright + (topPosition == index ? topBrightFactor : 0));
+
             this->setPixelColor(index,
             index < NUMPIXELS / 4 || index >= NUMPIXELS * 3 / 4 ?
-            this->Color(color->GetR() * brightFactor,
-                        color->GetG() * brightFactor,
-                        color->GetB() * brightFactor) :
-            this->Color((int)(((float)color->GetR() + (float)(255 - color->GetR()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * brightFactor),
-                        (int)(((float)color->GetG() + (float)(255 - color->GetG()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * brightFactor),
-                        (int)(((float)color->GetB() + (float)(255 - color->GetB()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * brightFactor)));
+            this->Color(color->GetR() * totalBright,
+                        color->GetG() * totalBright,
+                        color->GetB() * totalBright) :
+            this->Color((int)(((float)color->GetR() + (float)(255 - color->GetR()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * totalBright),
+                        (int)(((float)color->GetG() + (float)(255 - color->GetG()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * totalBright),
+                        (int)(((float)color->GetB() + (float)(255 - color->GetB()) / (float)(NUMPIXELS / 4 - 1) * (float)(j - NUMPIXELS / 4)) * totalBright)));
         }
     }
 

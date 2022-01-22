@@ -20,7 +20,7 @@ void setup() {
   ultrasonic_sensor = new UltrasonicSensor();
   button1 = new Button(6, DELAY_INTERVAL);
   button2 = new Button(7, DELAY_INTERVAL);
-  leds = new AdafruitLeds(8, 0.5, 10, 1000, 2000);
+  leds = new AdafruitLeds(8, 1.0, 10, 1000, 2000, 2000, 750, 0.2);
   buttonWaitForRelease = false;
 }
 

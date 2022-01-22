@@ -49,6 +49,24 @@ class LedEndpoint{
         void ComputeNext();
 };
 
+class TopBehavior {
+    private :
+        int step, lightTime, waitingTime, currentStep;
+        int position, ledCount;
+        float brightFactor;
+        bool isWaiting;
+
+        void requestNewPosition();
+
+    public :
+        TopBehavior(const int, const int, const int, const int, const float);
+        void ComputeNext();
+
+        int GetPosition() const;
+        float GetOriginalBrightFactor() const;
+        float GetCurrentBrightFactor() const;
+};
+
 class AdafruitLeds : Adafruit_NeoPixel{
     
     private :
@@ -57,11 +75,12 @@ class AdafruitLeds : Adafruit_NeoPixel{
         LedEndpoint *first_endpoint, *last_endpoint;
         int leds_delay;
         FadingSystem* fadingSystem;
+        TopBehavior* topBehavior;
 
         void computeNext();
     
     public :
-        AdafruitLeds(const int, const float, const int, const int, const int);
+        AdafruitLeds(const int, const float, const int, const int, const int, const int, const int, const float);
         ~AdafruitLeds();
 
         int GetLedsDelay() const;
