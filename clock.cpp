@@ -6,7 +6,7 @@ constexpr unsigned char Clock::SETTINGSSEG[];
 
 Clock::Clock(const int& interval) : TM1637Display(Clock::CLK, Clock::DIO) {
     this->clear();
-    this->setBrightness(7);
+    this->setBrightness(1);
     this->displayMsRemaining = 0;
     this->update_interval = interval;
     this->mode = HOUR;
@@ -23,7 +23,7 @@ void Clock::UpdateDisplay() {
         if (this->displayMsRemaining > 0)
         {
             this->showNumberDecEx(this->rtc->getHour(h12, PM) * 100 + this->rtc->getMinute(),
-                0b11100000, false, 4, 0);
+                0b11100000, true, 4, 0);
                 
             this->displayMsRemaining -=
                 (this->displayMsRemaining > this->update_interval ? this->update_interval : this->displayMsRemaining);
@@ -39,7 +39,7 @@ void Clock::UpdateDisplay() {
             this->setSegments(Clock::SETTINGSSEG, 2, 2);
         }
         else if(this->settingsStep == 2){
-            this->showNumberDecEx(this->rtc->getMinute(), 0b11100000, false, 2, 2);
+            this->showNumberDecEx(this->rtc->getMinute(), 0b11100000, true, 2, 2);
             this->setSegments(Clock::SETTINGSSEG, 2, 0);
         }
     }
